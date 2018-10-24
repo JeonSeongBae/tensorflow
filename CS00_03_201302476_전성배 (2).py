@@ -1,24 +1,21 @@
 import tensorflow as tf
+import numpy as np
+
+# Hypothesis : logistic function
+# Prediction : 예측값이 0.5 보다 클 때와 작을 때를 기준으로 class label 결정
+
 tf.set_random_seed(777)  # for reproducibility
 
-x_data = [[1, 2],
-          [2, 3],
-          [3, 1],
-          [4, 3],
-          [5, 3],
-          [6, 2]]
-y_data = [[0],
-          [0],
-          [0],
-          [1],
-          [1],
-          [1]]
+xy = np.loadtxt('magic_test.csv', delimiter=',', dtype=np.float32)
+# dataset
+x_data = xy[:, 0:-1]
+y_data = xy[:, [-1]]
 
 # placeholders for a tensor that will be always fed.
-X = tf.placeholder(tf.float32, shape=[None, 2])
+X = tf.placeholder(tf.float32, shape=[None, 10])
 Y = tf.placeholder(tf.float32, shape=[None, 1])
 
-W = tf.Variable(tf.random_normal([2, 1]), name='weight')
+W = tf.Variable(tf.random_normal([10, 1]), name='weight')
 b = tf.Variable(tf.random_normal([1]), name='bias')
 
 # Hypothesis using sigmoid: tf.div(1., 1. + tf.exp(tf.matmul(X, W)))
