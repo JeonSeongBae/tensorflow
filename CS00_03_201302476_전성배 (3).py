@@ -1,48 +1,88 @@
+# Lab 7 Learning rate and Evaluation
 import tensorflow as tf
-import numpy as np
-
-# Hypothesis : logistic function
-# Prediction : 예측값이 0.5 보다 클 때와 작을 때를 기준으로 class label 결정
-
+import random
+import matplotlib.pyplot as plt
 tf.set_random_seed(777)  # for reproducibility
 
-xy = np.loadtxt('magic_test.csv', delimiter=',', dtype=np.float32)
-# dataset
-x_data = xy[:, 0:-1]
-y_data = xy[:, [-1]]
+from tensorflow.examples.tutorials.mnist import input_data
+# Check out https://www.tensorflow.org/get_started/mnist/beginners for
+# more information about the mnist dataset
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-# placeholders for a tensor that will be always fed.
-X = tf.placeholder(tf.float32, shape=[None, 10])
-Y = tf.placeholder(tf.float32, shape=[None, 1])
+nb_classes = 10
 
-W = tf.Variable(tf.random_normal([10, 1]), name='weight')
-b = tf.Variable(tf.random_normal([1]), name='bias')
+# MNIST data image of shape 28 * 28 = 784
+X = tf.placeholder(tf.float32, [None, 784])
+# 0 - 9 digits recognition = 10 classes
+Y = tf.placeholder(tf.float32, [None, nb_classes])
 
-# Hypothesis using sigmoid: tf.div(1., 1. + tf.exp(tf.matmul(X, W)))
-hypothesis = tf.sigmoid(tf.matmul(X, W) + b)
+W = tf.Variable(tf.random_normal([784, nb_classes]))
+b = tf.Variable(tf.random_normal([nb_classes]))
 
-# cost/loss function
-cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) *
-                       tf.log(1 - hypothesis))
+# Hypothesis (using softmax)
+hypothesis = tf.nn.softmax(tf.matmul(X, W) + b)
 
-train = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(cost)
+cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(cost)
 
-# Accuracy computation
-# True if hypothesis>0.5 else False
-predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32)
-accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32))
+# Test model
+is_correct = tf.equal(tf.arg_max(hypothesis, 1), tf.arg_max(Y, 1))
+# Calculate accuracy
+accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
 
-# Launch graph
+# parameters
+training_epochs = 15
+batch_size = 100
+
+# plot
+x = []
+test = []
+train = []
+validation = []
+
 with tf.Session() as sess:
     # Initialize TensorFlow variables
     sess.run(tf.global_variables_initializer())
+    # Training cycle
+    for epoch in range(training_epochs):
+        avg_cost = 0
+        total_batch = int(mnist.train.num_examples / batch_size)
 
-    for step in range(10001):
-        cost_val, _ = sess.run([cost, train], feed_dict={X: x_data, Y: y_data})
-        if step % 200 == 0:
-            print(step, cost_val)
+        for i in range(total_batch):
+            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+            c, _ = sess.run([cost, optimizer], feed_dict={
+                            X: batch_xs, Y: batch_ys})
+            avg_cost += c / total_batch
 
-    # Accuracy report
-    h, c, a = sess.run([hypothesis, predicted, accuracy],
-                       feed_dict={X: x_data, Y: y_data})
-    print("\nHypothesis: ", h, "\nCorrect (Y): ", c, "\nAccuracy: ", a)
+        print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost))
+        #X_plot.append(epoch+1)
+
+        x.append(epoch+1)
+        # Test the model using test sets
+        print("Accuracy: ", accuracy.eval(session=sess, feed_dict={
+            X: mnist.test.images, Y: mnist.test.labels}))
+        test.append(accuracy.eval(session=sess, feed_dict={
+            X: mnist.test.images, Y: mnist.test.labels}))
+        train.append(accuracy.eval(session=sess, feed_dict={
+            X: mnist.train.images, Y: mnist.train.labels}))
+        validation.append(accuracy.eval(session=sess, feed_dict={
+            X: mnist.validation.images, Y: mnist.validation.labels}))
+
+    print("Learning finished")
+
+    # Test the model using test sets
+    print("Accuracy: ", accuracy.eval(session=sess, feed_dict={
+          X: mnist.test.images, Y: mnist.test.labels}))
+
+    # Get one and predict
+    r = random.randint(0, mnist.test.num_examples - 1)
+    print("Label: ", sess.run(tf.argmax(mnist.test.labels[r:r + 1], 1)))
+    print("Prediction: ", sess.run(
+        tf.argmax(hypothesis, 1), feed_dict={X: mnist.test.images[r:r + 1]}))
+
+
+    plt.plot(x, test, label='test')
+    plt.plot(x, train, label='train')
+    plt.plot(x, validation, label='validation')
+    plt.legend()
+    plt.show()
