@@ -29,16 +29,28 @@ print("one_hot", Y_one_hot)
 Y_one_hot = tf.reshape(Y_one_hot, [-1, nb_classes])
 print("reshape", Y_one_hot)
 
-W1 = tf.Variable(tf.random_normal([19, 256]), name='weight')
+W1 = tf.get_variable("W1", shape=[19, 256],
+                     initializer=tf.contrib.layers.xavier_initializer())
 b1 = tf.Variable(tf.random_normal([256]), name='bias')
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([256, nb_classes]), name='weight')
-b2 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
+W2 = tf.get_variable("W2", shape=[256, 256],
+                     initializer=tf.contrib.layers.xavier_initializer())
+b2 = tf.Variable(tf.random_normal([256]), name='bias')
+L2 = tf.nn.relu(tf.matmul(X, W1) + b1)
+
+W3 = tf.get_variable("W3", shape=[256, 256],
+                     initializer=tf.contrib.layers.xavier_initializer())
+b3 = tf.Variable(tf.random_normal([256]), name='bias')
+L3 = tf.nn.relu(tf.matmul(X, W1) + b1)
+
+W4 = tf.get_variable("W4", shape=[256, nb_classes],
+                     initializer=tf.contrib.layers.xavier_initializer())
+b4 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
 
 # tf.nn.softmax computes softmax activations
 # softmax = exp(logits) / reduce_sum(exp(logits), dim)
-logits = tf.matmul(L1, W2) + b2
+logits = tf.matmul(L3, W4) + b4
 hypothesis = tf.nn.softmax(logits)
 
 # Cross entropy cost/loss

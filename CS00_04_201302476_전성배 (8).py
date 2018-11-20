@@ -66,12 +66,12 @@ with tf.Session() as sess:
         sess.run(optimizer, feed_dict={X: x_data_traing, Y: y_data_traing})
         if step % 100 == 0:
             loss, acc = sess.run([cost, accuracy], feed_dict={
-                                 X: x_data, Y: y_data})
+                                 X: x_data_traing, Y: y_data_traing})
             print("Step: {:5}\tLoss: {:.3f}\tAcc: {:.2%}".format(
                 step, loss, acc))
 
     # Let's see if we can predict
-    pred = sess.run(prediction, feed_dict={X: x_data})
+    pred = sess.run(prediction, feed_dict={X: x_data_testing})
     # y_data: (N,1) = flatten => (N, ) matches pred.shape
-    for p, y in zip(pred, y_data.flatten()):
+    for p, y in zip(pred, y_data_testing.flatten()):
         print("[{}] Prediction: {} True Y: {}".format(p == int(y), p, int(y)))
