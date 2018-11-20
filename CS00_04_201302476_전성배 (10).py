@@ -29,27 +29,32 @@ print("one_hot", Y_one_hot)
 Y_one_hot = tf.reshape(Y_one_hot, [-1, nb_classes])
 print("reshape", Y_one_hot)
 
+keep_prob = 0.8
+
 W1 = tf.get_variable("W1", shape=[19, 256],
                      initializer=tf.contrib.layers.xavier_initializer())
 b1 = tf.Variable(tf.random_normal([256]), name='bias')
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L1 = tf.nn.dropout(L1, keep_prob=keep_prob)
 
 W2 = tf.get_variable("W2", shape=[256, 256],
                      initializer=tf.contrib.layers.xavier_initializer())
 b2 = tf.Variable(tf.random_normal([256]), name='bias')
-L2 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+L2 = tf.nn.dropout(L2, keep_prob=keep_prob)
 
 W3 = tf.get_variable("W3", shape=[256, 256],
                      initializer=tf.contrib.layers.xavier_initializer())
 b3 = tf.Variable(tf.random_normal([256]), name='bias')
-L3 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
+L3 = tf.nn.dropout(L3, keep_prob=keep_prob)
 
 W4 = tf.get_variable("W4", shape=[256, nb_classes],
                      initializer=tf.contrib.layers.xavier_initializer())
 b4 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
 
 # tf.nn.softmax computes softmax activations
-# softmax = exp(logits) / reduce_sum(exp(logits), dim)
+# softmax = exp(logits) / reduce_sum(exp(logits), dim)        print("[{}] Prediction: {} True Y: {}".format(p == int(y), p, int(y)))
 logits = tf.matmul(L3, W4) + b4
 hypothesis = tf.nn.softmax(logits)
 
@@ -75,7 +80,5 @@ with tf.Session() as sess:
                 step, loss, acc))
 
     # Let's see if we can predict
-    pred = sess.run(prediction, feed_dict={X: x_data_testing})
-    # y_data: (N,1) = flatten => (N, ) matches pred.shape
-    for p, y in zip(pred, y_data_testing.flatten()):
-        print("[{}] Prediction: {} True Y: {}".format(p == int(y), p, int(y)))
+    pred = sess.run(accuracy, feed_dict={X: x_data_testing, Y: y_data_testing})
+    print(format(pred))    # y_data: (N,1) = flatten => (N, ) matches pred.shape

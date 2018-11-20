@@ -35,11 +35,11 @@ L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
 W2 = tf.Variable(tf.random_normal([256, 256]), name='weight')
 b2 = tf.Variable(tf.random_normal([256]), name='bias')
-L2 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 
 W3 = tf.Variable(tf.random_normal([256, 256]), name='weight')
 b3 = tf.Variable(tf.random_normal([256]), name='bias')
-L3 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
 
 W4 = tf.Variable(tf.random_normal([256, nb_classes]), name='weight')
 b4 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
@@ -53,7 +53,7 @@ hypothesis = tf.nn.softmax(logits)
 cost_i = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits,
                                                  labels=tf.stop_gradient([Y_one_hot]))
 cost = tf.reduce_mean(cost_i)
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(cost)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(cost)
 
 prediction = tf.argmax(hypothesis, 1)
 correct_prediction = tf.equal(prediction, tf.argmax(Y_one_hot, 1))
@@ -71,7 +71,5 @@ with tf.Session() as sess:
                 step, loss, acc))
 
     # Let's see if we can predict
-    pred = sess.run(prediction, feed_dict={X: x_data_testing})
-    # y_data: (N,1) = flatten => (N, ) matches pred.shape
-    for p, y in zip(pred, y_data_testing.flatten()):
-        print("[{}] Prediction: {} True Y: {}".format(p == int(y), p, int(y)))
+    pred = sess.run(accuracy, feed_dict={X: x_data_testing, Y: y_data_testing})
+    print(format(pred))    # y_data: (N,1) = flatten => (N, ) matches pred.shape
