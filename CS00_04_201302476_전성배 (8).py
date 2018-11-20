@@ -33,12 +33,20 @@ W1 = tf.Variable(tf.random_normal([19, 256]), name='weight')
 b1 = tf.Variable(tf.random_normal([256]), name='bias')
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([256, nb_classes]), name='weight')
-b2 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
+W2 = tf.Variable(tf.random_normal([256, 256]), name='weight')
+b2 = tf.Variable(tf.random_normal([256]), name='bias')
+L2 = tf.nn.relu(tf.matmul(X, W1) + b1)
+
+W3 = tf.Variable(tf.random_normal([256, 256]), name='weight')
+b3 = tf.Variable(tf.random_normal([256]), name='bias')
+L3 = tf.nn.relu(tf.matmul(X, W1) + b1)
+
+W4 = tf.Variable(tf.random_normal([256, nb_classes]), name='weight')
+b4 = tf.Variable(tf.random_normal([nb_classes]), name='bias')
 
 # tf.nn.softmax computes softmax activations
 # softmax = exp(logits) / reduce_sum(exp(logits), dim)
-logits = tf.matmul(L1, W2) + b2
+logits = tf.matmul(L3, W4) + b4
 hypothesis = tf.nn.softmax(logits)
 
 # Cross entropy cost/loss
